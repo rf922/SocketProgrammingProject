@@ -13,10 +13,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class TextServer {
-    
+
     private static final int PORT_NUM = 1212;
-    private static final String PROMPT = String.format("", "");
-    
+    private static final String BORDER = "===========================";
+    private static final String PROMPT = String.format("%s%n%s%n%s%n%s%n%s%n%s",
+        BORDER,
+        "0 : Connect to Server",
+        "1 : Get the User List",
+        "2 : Send a message",
+        "3 : Get my Messages",
+        "4 : Exit",
+        BORDER
+    );
+
     private static final HashMap<String, String> users = new HashMap<>();
     private static final HashMap<String, ArrayList<Message>> userMessages = new HashMap<>();
 
@@ -25,7 +34,6 @@ public class TextServer {
      */
     private static class Message implements Comparable<Message> {
 
-        private static final String border = "===========================";
         private LocalDateTime date;
         private String sender;
         private String message;
@@ -88,15 +96,105 @@ public class TextServer {
     }
 
     public static void handleClient(Socket socket) {
-        try (PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-            String prompt = String.format("");
-            out.println("Prompt here");
-            String res = in.readLine();
-            
+        try (PrintWriter out = new PrintWriter(socket.getOutputStream(), true); BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
+            boolean sessActive = true;
+
+            while (sessActive) {
+                out.println(PROMPT);
+                String res = in.readLine();
+                if (res != null) {
+                    int selection = Integer.parseInt(res);
+                    switch (selection) {
+                        case 0 -> accessServer(out, in);
+                        case 1 -> getUserList(out);
+                        case 2 -> {
+
+                        }
+                        case 3 -> {
+                            
+                        }
+                        case 4 -> {
+                            out.println("Exiting...");
+                            sessActive = false;
+                        }
+                        default ->
+                            out.println("Invalid option. please try again");
+                    };
+                }
+            }
+
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * 
+     * Methods to handle processing each option 0 - 4
+     * 
+     */
+    
+    /**
+     * prompts the user for their user name and password. Upon success informs the 
+     * user by printing an acknowledgement message
+     * @param out
+     * @param in
+     * @throws IOException 
+     */
+    public static void accessServer(PrintWriter out, BufferedReader in) throws IOException {
+        out.println("Please enter your user name : ");
+        String userName = in.readLine();
+        if (userName != null && users.containsKey(userName)) {
+            out.println("Please enter your password : ");
+            String passwd = in.readLine();
+            if (users.get(userName).equalsIgnoreCase(passwd)) {
+                out.println(BORDER + "\nAccess Granted\n" + BORDER);
+            }
+        } else {
+            out.println("User Was not found");
+        }
+    }
+    
+    /**
+     * Retrieves a list of each users user name in the servers user list
+     * @param out 
+     */
+    public static void getUserList(PrintWriter out){
+        out.println("Returning List of users..");
+        users.keySet().forEach(user -> out.println(user));
+    }
+    
+    public static void sendMessage(PrintWriter out, BufferedReader in){
+    
+    }
+    
+    /**
+     * Retrieves a users messages stored on the server
+     * @param out
+     * @param in 
+     */
+    public static void getMyMessages(PrintWriter out, BufferedReader in){
+        
+    }
+    
+    
 }
+
+
+
+
+/**
+ * 
+ *  questions to consider
+ * 
+ * 1. Should new users be able to register ?
+ * 2. Should getMyMessages also get the messages a user has sent outwards ?
+ * 3. Are the other options selectable i.e can a user directly pick 3 without 
+ * having picked 0 , if thats the case can i prompt them for the user name
+ * 
+ * 
+ * 
+ */

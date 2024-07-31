@@ -5,7 +5,6 @@
  */
 package textclient;
 
-
 import java.io.*;
 import java.net.*;
 import java.time.LocalDateTime;
@@ -14,27 +13,43 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class TextClient {
+
     private static final int PORT_NUM = 1212;
+    private static final String BORDER = "=========================";
     private static final String HOST = "localhost";
+
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        String message;
-        Scanner sc = new Scanner(System.in);
-        try(Socket textClientSocket = new Socket(HOST, PORT_NUM);){            
-            System.out.println("Connected to Server ");
-            Scanner scn = new Scanner(textClientSocket.getInputStream());
-            PrintWriter pw = new PrintWriter(textClientSocket.getOutputStream(), true);
-            while(true){
-                System.out.println("Enter a message: ");
-                message = sc.nextLine();
-                pw.println(message);
-                System.out.println(scn.nextLine());
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        try (Socket textClientSocket = new Socket(HOST, PORT_NUM); 
+            BufferedReader clientInput = new BufferedReader(new InputStreamReader(System.in)); 
+            BufferedReader serverResponse = new BufferedReader(new InputStreamReader(textClientSocket.getInputStream())); 
+            PrintWriter pw = new PrintWriter(textClientSocket.getOutputStream(), true);) {
+            
+            Runnable serverMessageHandler = () -> {
+                try {
+                    String serverMessage;
+                    while ((serverMessage = serverResponse.readLine()) != null) {
+                        System.out.println(serverMessage);
+                    }
+                } catch (IOException e) {
+                    System.out.println("Error reading from server: " + e.getMessage());
+                }
+            };
+            
+            executorService.submit(serverMessageHandler);
+                        
+            while (!executorService.isShutdown()) {
+                String userInput = clientInput.readLine();
+                if (userInput != null) {
+                    pw.println(userInput);
+                }
             }
-        }catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    
+
 }
