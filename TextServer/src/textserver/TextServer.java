@@ -109,12 +109,8 @@ public class TextServer {
                     switch (selection) {
                         case 0 -> accessServer(out, in, socket);
                         case 1 -> getUserList(out);
-                        case 2 -> {
-
-                        }
-                        case 3 -> {
-                            
-                        }
+                        case 2 -> sendMessage(out, in, socket);
+                        case 3 -> getUserMessages(out, in, socket);
                         case 4 -> {
                             out.println("Exiting...");
                             if(sessions.containsKey(socket)){
@@ -134,10 +130,10 @@ public class TextServer {
             e.printStackTrace();
         } finally {
         if (sessions.containsKey(socket)) {
-            sessions.remove(socket); // Clean up session.
+            sessions.remove(socket); 
         }
         try {
-            socket.close(); // Ensure socket is closed.
+            socket.close(); 
         } catch (IOException e) {
             System.out.println("Error closing socket.");
         }
@@ -203,8 +199,12 @@ public class TextServer {
      * @param in 
      * @param clientSocket 
      */
-    public static void getMyMessages(PrintWriter out, BufferedReader in, Socket clientSocket){
-        
+    public static void getUserMessages(PrintWriter out, BufferedReader in, Socket clientSocket){
+        String user = sessions.get(clientSocket);
+        ArrayList<Message> userInbox =  userMessages.get(user);
+        userInbox.sort(Message::compareTo);
+        out.println(String.format("%s%n%s", "Here are your messages : ", BORDER));
+        userInbox.stream().map(x -> x.toString()).forEach(out::println);
     }
     
     
