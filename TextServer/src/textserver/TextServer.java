@@ -26,6 +26,7 @@ public class TextServer {
         BORDER
     );
 
+    private static final HashMap<Socket, String> sessions = new HashMap<>();
     private static final HashMap<String, String> users = new HashMap<>();
     private static final HashMap<String, ArrayList<Message>> userMessages = new HashMap<>();
 
@@ -106,7 +107,7 @@ public class TextServer {
                 if (res != null) {
                     int selection = Integer.parseInt(res);
                     switch (selection) {
-                        case 0 -> accessServer(out, in);
+                        case 0 -> accessServer(out, in, socket);
                         case 1 -> getUserList(out);
                         case 2 -> {
 
@@ -116,6 +117,9 @@ public class TextServer {
                         }
                         case 4 -> {
                             out.println("Exiting...");
+                            if(sessions.containsKey(socket)){
+                                sessions.remove(socket);
+                            }
                             sessActive = false;
                         }
                         default ->
@@ -128,7 +132,16 @@ public class TextServer {
             e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+        if (sessions.containsKey(socket)) {
+            sessions.remove(socket); // Clean up session.
         }
+        try {
+            socket.close(); // Ensure socket is closed.
+        } catch (IOException e) {
+            System.out.println("Error closing socket.");
+        }
+    }
     }
 
     /**
@@ -144,7 +157,7 @@ public class TextServer {
      * @param in
      * @throws IOException 
      */
-    public static void accessServer(PrintWriter out, BufferedReader in) throws IOException {
+    public static void accessServer(PrintWriter out, BufferedReader in, Socket clientSocket) throws IOException {
         out.println("Please enter your user name : ");
         String userName = in.readLine();
         if (userName != null && users.containsKey(userName)) {
@@ -152,6 +165,7 @@ public class TextServer {
             String passwd = in.readLine();
             if (users.get(userName).equalsIgnoreCase(passwd)) {
                 out.println(BORDER + "\nAccess Granted\n" + BORDER);
+                sessions.put(clientSocket, userName);
             }
         } else {
             out.println("User Was not found");
@@ -167,16 +181,29 @@ public class TextServer {
         users.keySet().forEach(user -> out.println(user));
     }
     
-    public static void sendMessage(PrintWriter out, BufferedReader in){
-    
+    public static void sendMessage(PrintWriter out, BufferedReader in, Socket clientSocket) throws IOException{
+        if(sessions.containsKey(clientSocket)){
+            String userName = sessions.get(clientSocket);
+            out.println("Enter a user name you want to send a message to : ");
+            String receiver = in.readLine();
+            if(receiver != null && users.containsKey(receiver)){
+                out.println("Enter the message you want to send : ");
+                String msg = in.readLine();
+                Message newMsg = new Message(LocalDateTime.now(), userName, msg);
+                userMessages.get(receiver).add(newMsg);
+            }else{
+                out.println("Unable to send message please try again.");
+            }
+        }
     }
     
     /**
      * Retrieves a users messages stored on the server
      * @param out
      * @param in 
+     * @param clientSocket 
      */
-    public static void getMyMessages(PrintWriter out, BufferedReader in){
+    public static void getMyMessages(PrintWriter out, BufferedReader in, Socket clientSocket){
         
     }
     
@@ -193,7 +220,8 @@ public class TextServer {
  * 1. Should new users be able to register ?
  * 2. Should getMyMessages also get the messages a user has sent outwards ?
  * 3. Are the other options selectable i.e can a user directly pick 3 without 
- * having picked 0 , if thats the case can i prompt them for the user name
+ * having picked 0 , if thats the case can i prompt them for the user name ? Or should i 
+ * prompt them to select option 0 ?
  * 
  * 
  * 
