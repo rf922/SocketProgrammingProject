@@ -115,7 +115,7 @@ public class TextServer {
         users.put("Yetem", "secret-key02");
         users.put("Keev", "secret-key03");
         users.put("Don", "secret-key04");
-        users.put("sean", "secret-key05");
+        users.put("Sean", "secret-key05");
         users.put("Brianna", "secret-key06");
 
         /**
@@ -271,7 +271,7 @@ public class TextServer {
         if (sessions.containsKey(clientSocket)) {
             String userName = sessions.get(clientSocket);
             out.println(Protocol.MESSAGE + "Enter a user name you want to send a message to : ");
-            String receiver = in.readLine();
+            String receiver = in.readLine().strip();
             if (receiver != null && users.containsKey(receiver)) {
                 out.println(Protocol.MESSAGE + "Enter the message you want to send : ");
                 String msg = in.readLine();
@@ -282,6 +282,8 @@ public class TextServer {
             } else {
                 out.println(Protocol.MESSAGE + "Unable to send message please try again.");
             }
+        }else{
+            out.println(Protocol.MESSAGE + "Username was not found on server, please try again");          
         }
     }
 
@@ -301,7 +303,7 @@ public class TextServer {
             out.println(String.format("%s%n%s", Protocol.MESSAGE + "Here are your messages : ", Protocol.MESSAGE + BORDER));
             userInbox.stream().map(x -> Protocol.MESSAGE + x.toString()).forEach(out::println);
         } else {
-            out.println(Protocol.MESSAGE + "Unable to retrievee User Messages, please try again");
+            out.println(Protocol.MESSAGE + "Unable to retrieve User Messages, please try again");
         }
     }
 
@@ -315,11 +317,12 @@ public class TextServer {
      */
     public static void exitServer(PrintWriter out, Socket clientSocket) throws IOException {
         out.println(Protocol.EXIT + "Exiting...");
-        String userName = sessions.get(clientSocket);
+        String userName = sessions.getOrDefault(clientSocket, "client");
         if (sessions.containsKey(clientSocket)) {
             sessions.remove(clientSocket);
         }
-        System.out.println(userName + " is Logged out..");
+        System.out.println(userName + " is Logged out..");        
+
     }
 }
 
@@ -333,6 +336,7 @@ public class TextServer {
  * can i prompt them for the user name ? Or should i prompt them to select
  * option 0 ?
  *
+ * CASE SENSITIVITY ! 
  *
  *
  */
