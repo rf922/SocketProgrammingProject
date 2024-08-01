@@ -1,22 +1,21 @@
 /*
- * 
- * 
- * 
+ * This is the text client for the socket programming project
+ * This client is meant to connect to the textserver and allows the 
+ * user to interact with and query the server
  */
 package textclient;
 
 import java.io.*;
 import java.net.*;
-import java.time.LocalDateTime;
-import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class TextClient {
 
+    /**
+     * The port number and host configuration for the server
+     */
     private static final int PORT_NUM = 1212;
-    private static final int EXIT_CODE = 922002234;
-    private static final String BORDER = "=========================";
     private static final String HOST = "localhost";
 
     /**
@@ -51,27 +50,27 @@ public class TextClient {
     }
 
     /**
+     * Main entry point for the client program
      * @param args the command line arguments
      */
     public static void main(String[] args) {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         try (Socket textClientSocket = new Socket(HOST, PORT_NUM); BufferedReader clientInput = new BufferedReader(new InputStreamReader(System.in)); BufferedReader serverResponse = new BufferedReader(new InputStreamReader(textClientSocket.getInputStream())); PrintWriter pw = new PrintWriter(textClientSocket.getOutputStream(), true);) {
-
-            Runnable serverMessageHandler = () -> {
+            Runnable serverMessageHandler = () -> {//client side logic 
                 try {
                     String serverMessage;
-                    while ((serverMessage = serverResponse.readLine()) != null ) {
+                    while ((serverMessage = serverResponse.readLine()) != null ) {// main client loop
                         //System.out.println("[ SERVER MESSAGE ]"+serverMessage);
                         String[] segments = serverMessage.split(":", 2);
                         int protocolCode = Integer.parseInt(segments[0]);
                         String serverMsg = segments.length > 1 ? segments[1] : "";
                         Protocol protocol = Protocol.fromCode(protocolCode);
                         switch (protocol) {
-                            case MESSAGE ->
+                            case MESSAGE -> // default message reponses from server
                                 System.out.println(serverMsg);
-                            case ERROR ->
+                            case ERROR ->   // error messages from the server
                                 System.out.println("Error Message From Server : " + serverMsg);
-                            case EXIT -> {
+                            case EXIT -> {  // handles signal to exit the server
                                 System.out.println(serverMsg);
                                 executorService.shutdown();
                                 textClientSocket.close();

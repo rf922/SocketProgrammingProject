@@ -1,7 +1,7 @@
 /*
- * 
- * 
- * 
+ * This is the server for the socket programming project
+ * it allows clients to send messages to one another, see other users and
+ * check received messages
  */
 package textserver;
 
@@ -11,11 +11,17 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collector;
 
 public class TextServer {
 
+    /**
+     * port number for the server
+     */
     private static final int PORT_NUM = 1212;
+    
+    /**
+     * text prompt and border for server messages
+     */
     private static final String BORDER = "===========================";
     private static final String PROMPT = String.format("%s%n%s%n%s%n%s%n%s%n%s%n%s",
         Protocol.MESSAGE + BORDER,
@@ -27,6 +33,9 @@ public class TextServer {
         Protocol.MESSAGE + BORDER
     );
 
+    /**
+     * hashmaps to store active sessions, the servers users and their messages
+     */
     private static final HashMap<Socket, String> sessions = new HashMap<>();
     private static final HashMap<String, String> users = new HashMap<>();
     private static final HashMap<String, ArrayList<Message>> userMessages = new HashMap<>();
@@ -99,6 +108,9 @@ public class TextServer {
      * Initializer block to populate user hash map & userMessages Hashmap
      */
     static {
+        /**
+         * The serrver users
+         */
         users.put("Rf922", "secret-key01");
         users.put("Yetem", "secret-key02");
         users.put("Keev", "secret-key03");
@@ -106,28 +118,40 @@ public class TextServer {
         users.put("sean", "secret-key05");
         users.put("Brianna", "secret-key06");
 
+        /**
+         * User's messages / inboxes 
+         */
         userMessages.put("Rf922", new ArrayList<>());
-        userMessages.get("Rf922").add(new Message(LocalDateTime.now(), "Sean", "Down for Math book club ? 4:00 P.M Wednday @ the pub "));
-        userMessages.get("Rf922").add(new Message(LocalDateTime.now(), "Yetem", "wyd"));
-
         userMessages.put("Yetem", new ArrayList<>());
-        userMessages.get("Yetem").add(new Message(LocalDateTime.now(), "Sean", "Down for Math book club ? 4:00 P.M Wednday @ the pub "));
-
         userMessages.put("Don", new ArrayList<>());
         userMessages.put("Keev", new ArrayList<>());
         userMessages.put("Sean", new ArrayList<>());
         userMessages.put("Brianna", new ArrayList<>());
+        
+        /**
+         * Sample messages
+         */
+
+        /* Rf922 */
+        userMessages.get("Rf922").add(new Message(LocalDateTime.now(), "Sean", "Down for Math book club ? 4:00 P.M Wednday @ the pub "));
+        userMessages.get("Rf922").add(new Message(LocalDateTime.now(), "Yetem", "wyd"));
+
+        /* Yetem */
+        userMessages.get("Yetem").add(new Message(LocalDateTime.now(), "Sean", "Down for Math book club ? 4:00 P.M Wednday @ the pub "));
+
+
 
     }
 
     /**
+     * main process for the server.
      * @param args the command line arguments
      */
     public static void main(String[] args) {
         ExecutorService executorService = Executors.newCachedThreadPool();
         try (ServerSocket textServerSocket = new ServerSocket(PORT_NUM)) {
             System.out.println("Server is running...");
-            while (true) {
+            while (true) { //main event loop while server is active
                 Socket clientSocket = textServerSocket.accept();
                 executorService.submit(() -> handleClient(clientSocket));
             }
@@ -138,19 +162,23 @@ public class TextServer {
         }
     }
 
+    /**
+     * Central processing for connected clients, displays the client with 
+     * a prompt of options to choose from then calls the corresponding method
+     * depending on the users selection
+     * @param socket 
+     */
     public static void handleClient(Socket socket) {
         try (PrintWriter out = new PrintWriter(socket.getOutputStream(), true); BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-
             boolean sessActive = true;
-
-            while (sessActive) {
+            while (sessActive) {// main loop while server is running 
                 out.println(PROMPT);
                 String res = in.readLine();
                 if (res != null) {
                     System.out.println("User's choice is: " + res);
                     int selection = Integer.parseInt(res);
                     switch (selection) {
-                        case 0 ->
+                        case 0 -> 
                             accessServer(out, in, socket);
                         case 1 ->
                             getUserList(out);
@@ -172,7 +200,7 @@ public class TextServer {
             e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
+        } finally { // handles closing and removing closed connections
             if (sessions.containsKey(socket)) {
                 sessions.remove(socket);
             }
@@ -189,6 +217,7 @@ public class TextServer {
      * Methods to handle processing each option 0 - 4
      *
      */
+    
     /**
      * Prompts the user for their user name and password. Upon success informs
      * the user by printing an acknowledgement message
@@ -229,6 +258,15 @@ public class TextServer {
         });
     }
 
+    /**
+     * Handles the sending of messages from one user to another, storing the 
+     * message in the local message map and responding to the client with a 
+     * status message
+     * @param out
+     * @param in
+     * @param clientSocket
+     * @throws IOException 
+     */
     public static void sendMessage(PrintWriter out, BufferedReader in, Socket clientSocket) throws IOException {
         if (sessions.containsKey(clientSocket)) {
             String userName = sessions.get(clientSocket);
@@ -267,6 +305,14 @@ public class TextServer {
         }
     }
 
+    /**
+     * Handles users exiting from the server by removing their session and 
+     * sending the exit protocol signal to the client signaling that the client
+     * has exited the server.
+     * @param out
+     * @param clientSocket
+     * @throws IOException 
+     */
     public static void exitServer(PrintWriter out, Socket clientSocket) throws IOException {
         out.println(Protocol.EXIT + "Exiting...");
         String userName = sessions.get(clientSocket);
