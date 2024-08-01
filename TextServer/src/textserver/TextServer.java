@@ -162,10 +162,12 @@ public class TextServer {
                         case 4 -> {
                             try (socket) {
                                 out.println(Protocol.EXIT+"Exiting...");
+                                String userName = sessions.get(socket);
                                 if (sessions.containsKey(socket)) {
                                     sessions.remove(socket);
                                 }
                                 sessActive = false;
+                                System.out.println(userName+" is Logged out..");
                             }
                         }
 
@@ -210,8 +212,10 @@ public class TextServer {
         if (userName != null && users.containsKey(userName)) {
             out.println(Protocol.MESSAGE+"Please enter your password : ");
             String passwd = in.readLine();
+            System.out.println("Username = "+userName + " Password = "+passwd);
             if (users.get(userName).equalsIgnoreCase(passwd)) {
                 out.println(Protocol.MESSAGE+BORDER+"\n"+Protocol.MESSAGE+"Access Granted"+"\n" +Protocol.MESSAGE+ BORDER);
+                System.out.println("Access Granted");
                 sessions.put(clientSocket, userName);
             }
         } else {
@@ -225,7 +229,7 @@ public class TextServer {
      * @param out
      */
     public static void getUserList(PrintWriter out) {
-        System.out.println(Protocol.MESSAGE+"Returning List of Users..");
+        System.out.println("Returning List of Users..");
         out.println(Protocol.MESSAGE+"Returning List of users..");
         users.keySet().forEach(user -> {
             out.println(Protocol.MESSAGE+user);
@@ -243,6 +247,8 @@ public class TextServer {
                 String msg = in.readLine();
                 Message newMsg = new Message(LocalDateTime.now(), userName, msg);
                 userMessages.get(receiver).add(newMsg);
+                out.println(Protocol.MESSAGE+"Status : Message sent successfully");
+                System.out.println("Received Message for "+receiver);
             } else {
                 out.println(Protocol.MESSAGE+"Unable to send message please try again.");
             }
@@ -261,6 +267,7 @@ public class TextServer {
             String user = sessions.get(clientSocket);
             ArrayList<Message> userInbox = userMessages.get(user);
             userInbox.sort(Message::compareTo);
+            System.out.println("Retrieving Messages for "+user);
             out.println(String.format("%s%n%s", Protocol.MESSAGE+"Here are your messages : ", Protocol.MESSAGE+BORDER));
             userInbox.stream().map(x -> Protocol.MESSAGE+x.toString()).forEach(out::println);
         }else{
