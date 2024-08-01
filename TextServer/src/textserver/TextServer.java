@@ -18,13 +18,13 @@ public class TextServer {
     private static final int PORT_NUM = 1212;
     private static final String BORDER = "===========================";
     private static final String PROMPT = String.format("%s%n%s%n%s%n%s%n%s%n%s%n%s",
-       Protocol.MESSAGE+ BORDER,
-       Protocol.MESSAGE+ "0 : Connect to Server",
-       Protocol.MESSAGE+ "1 : Get the User List",
-       Protocol.MESSAGE+ "2 : Send a message",
-       Protocol.MESSAGE+ "3 : Get my Messages",
-       Protocol.MESSAGE+ "4 : Exit",
-       Protocol.MESSAGE+ BORDER
+        Protocol.MESSAGE + BORDER,
+        Protocol.MESSAGE + "0 : Connect to Server",
+        Protocol.MESSAGE + "1 : Get the User List",
+        Protocol.MESSAGE + "2 : Send a message",
+        Protocol.MESSAGE + "3 : Get my Messages",
+        Protocol.MESSAGE + "4 : Exit",
+        Protocol.MESSAGE + BORDER
     );
 
     private static final HashMap<Socket, String> sessions = new HashMap<>();
@@ -32,41 +32,40 @@ public class TextServer {
     private static final HashMap<String, ArrayList<Message>> userMessages = new HashMap<>();
 
     /**
-     * Protocol enum to handle different types of messages sent from the server to the 
-     * client
+     * Protocol enum to handle different types of messages sent from the server
+     * to the client
      */
     private static enum Protocol {
-    MESSAGE(94132),
-    ERROR(1),
-    EXIT(922002234);
+        MESSAGE(94132),
+        ERROR(1),
+        EXIT(922002234);
 
-    private final int code;
+        private final int code;
 
-    Protocol(int code) {
-        this.code = code;
-    }
-
-    public int getCode() {
-        return code;
-    }
-
-    public static Protocol fromCode(int code) {
-        for (Protocol protocol : Protocol.values()) {
-            if (protocol.getCode() == code) {
-                return protocol;
-            }
+        Protocol(int code) {
+            this.code = code;
         }
-        throw new IllegalArgumentException("Unknown protocol code: " + code);
-    }
+
+        public int getCode() {
+            return code;
+        }
+
+        public static Protocol fromCode(int code) {
+            for (Protocol protocol : Protocol.values()) {
+                if (protocol.getCode() == code) {
+                    return protocol;
+                }
+            }
+            throw new IllegalArgumentException("Unknown protocol code: " + code);
+        }
 
         @Override
         public String toString() {
-            return code+":";
+            return code + ":";
         }
-    
-    
-}
-    
+
+    }
+
     /**
      * Message class to handle user to user messages
      */
@@ -153,27 +152,19 @@ public class TextServer {
                     switch (selection) {
                         case 0 ->
                             accessServer(out, in, socket);
-                        case 1 -> 
-                            getUserList(out); 
+                        case 1 ->
+                            getUserList(out);
                         case 2 ->
                             sendMessage(out, in, socket);
                         case 3 ->
                             getUserMessages(out, in, socket);
                         case 4 -> {
-                            try (socket) {
-                                out.println(Protocol.EXIT+"Exiting...");
-                                String userName = sessions.get(socket);
-                                if (sessions.containsKey(socket)) {
-                                    sessions.remove(socket);
-                                }
-                                sessActive = false;
-                                System.out.println(userName+" is Logged out..");
-                            }
+                            exitServer(out, socket);
+                            sessActive = false;
                         }
-
                         default ->
-                            out.println(Protocol.MESSAGE+"Invalid option. please try again");
-                    };
+                            out.println(Protocol.MESSAGE + "Invalid option. please try again");
+                    }
                 }
             }
 
@@ -204,22 +195,23 @@ public class TextServer {
      *
      * @param out
      * @param in
+     * @param clientSocket
      * @throws IOException
      */
     public static void accessServer(PrintWriter out, BufferedReader in, Socket clientSocket) throws IOException {
-        out.println(Protocol.MESSAGE+"Please enter your user name : ");
+        out.println(Protocol.MESSAGE + "Please enter your user name : ");
         String userName = in.readLine();
         if (userName != null && users.containsKey(userName)) {
-            out.println(Protocol.MESSAGE+"Please enter your password : ");
+            out.println(Protocol.MESSAGE + "Please enter your password : ");
             String passwd = in.readLine();
-            System.out.println("Username = "+userName + " Password = "+passwd);
+            System.out.println("Username = " + userName + " Password = " + passwd);
             if (users.get(userName).equalsIgnoreCase(passwd)) {
-                out.println(Protocol.MESSAGE+BORDER+"\n"+Protocol.MESSAGE+"Access Granted"+"\n" +Protocol.MESSAGE+ BORDER);
+                out.println(Protocol.MESSAGE + BORDER + "\n" + Protocol.MESSAGE + "Access Granted" + "\n" + Protocol.MESSAGE + BORDER);
                 System.out.println("Access Granted");
                 sessions.put(clientSocket, userName);
             }
         } else {
-            out.println(Protocol.MESSAGE+"User Was not found");
+            out.println(Protocol.MESSAGE + "User Was not found");
         }
     }
 
@@ -230,9 +222,9 @@ public class TextServer {
      */
     public static void getUserList(PrintWriter out) {
         System.out.println("Returning List of Users..");
-        out.println(Protocol.MESSAGE+"Returning List of users..");
+        out.println(Protocol.MESSAGE + "Returning List of users..");
         users.keySet().forEach(user -> {
-            out.println(Protocol.MESSAGE+user);
+            out.println(Protocol.MESSAGE + user);
             System.out.println(user);
         });
     }
@@ -240,17 +232,17 @@ public class TextServer {
     public static void sendMessage(PrintWriter out, BufferedReader in, Socket clientSocket) throws IOException {
         if (sessions.containsKey(clientSocket)) {
             String userName = sessions.get(clientSocket);
-            out.println(Protocol.MESSAGE+"Enter a user name you want to send a message to : ");
+            out.println(Protocol.MESSAGE + "Enter a user name you want to send a message to : ");
             String receiver = in.readLine();
             if (receiver != null && users.containsKey(receiver)) {
-                out.println(Protocol.MESSAGE+"Enter the message you want to send : ");
+                out.println(Protocol.MESSAGE + "Enter the message you want to send : ");
                 String msg = in.readLine();
                 Message newMsg = new Message(LocalDateTime.now(), userName, msg);
                 userMessages.get(receiver).add(newMsg);
-                out.println(Protocol.MESSAGE+"Status : Message sent successfully");
-                System.out.println("Received Message for "+receiver);
+                out.println(Protocol.MESSAGE + "Status : Message sent successfully");
+                System.out.println("Received Message for " + receiver);
             } else {
-                out.println(Protocol.MESSAGE+"Unable to send message please try again.");
+                out.println(Protocol.MESSAGE + "Unable to send message please try again.");
             }
         }
     }
@@ -267,29 +259,34 @@ public class TextServer {
             String user = sessions.get(clientSocket);
             ArrayList<Message> userInbox = userMessages.get(user);
             userInbox.sort(Message::compareTo);
-            System.out.println("Retrieving Messages for "+user);
-            out.println(String.format("%s%n%s", Protocol.MESSAGE+"Here are your messages : ", Protocol.MESSAGE+BORDER));
-            userInbox.stream().map(x -> Protocol.MESSAGE+x.toString()).forEach(out::println);
-        }else{
-            out.println(Protocol.MESSAGE+"Unable to retrievee User Messages, please try again");
+            System.out.println("Retrieving Messages for " + user);
+            out.println(String.format("%s%n%s", Protocol.MESSAGE + "Here are your messages : ", Protocol.MESSAGE + BORDER));
+            userInbox.stream().map(x -> Protocol.MESSAGE + x.toString()).forEach(out::println);
+        } else {
+            out.println(Protocol.MESSAGE + "Unable to retrievee User Messages, please try again");
         }
     }
 
+    public static void exitServer(PrintWriter out, Socket clientSocket) throws IOException {
+        out.println(Protocol.EXIT + "Exiting...");
+        String userName = sessions.get(clientSocket);
+        if (sessions.containsKey(clientSocket)) {
+            sessions.remove(clientSocket);
+        }
+        System.out.println(userName + " is Logged out..");
+    }
 }
 
-
-
-
 /**
- * 
- *  questions to consider
- * 
- * 1. Should new users be able to register ?
- * 2. Should getMyMessages also get the messages a user has sent outwards ?
- * 3. Are the other options selectable i.e can a user directly pick 3 without 
- * having picked 0 , if thats the case can i prompt them for the user name ? Or should i 
- * prompt them to select option 0 ?
- * 
- * 
- * 
+ *
+ * questions to consider
+ *
+ * 1. Should new users be able to register ? 2. Should getMyMessages also get
+ * the messages a user has sent outwards ? 3. Are the other options selectable
+ * i.e can a user directly pick 3 without having picked 0 , if thats the case
+ * can i prompt them for the user name ? Or should i prompt them to select
+ * option 0 ?
+ *
+ *
+ *
  */
