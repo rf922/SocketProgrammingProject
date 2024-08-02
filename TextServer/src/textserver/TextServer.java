@@ -175,25 +175,32 @@ public class TextServer {
                 out.println(PROMPT);
                 String res = in.readLine();
                 if (res != null) {
-                    System.out.println("User's choice is: " + res);
-                    int selection = Integer.parseInt(res);
-                    switch (selection) {
-                        case 0 -> 
-                            accessServer(out, in, socket);
-                        case 1 ->
-                            getUserList(out);
-                        case 2 ->
-                            sendMessage(out, in, socket);
-                        case 3 ->
-                            getUserMessages(out, in, socket);
-                        case 4 -> {
-                            exitServer(out, socket);
-                            sessActive = false;
+                    try {
+                        int selection = Integer.parseInt(res);
+                        System.out.println("User's choice is: " + res);
+                        switch (selection) {
+                            case 0 ->
+                                accessServer(out, in, socket);
+                            case 1 ->
+                                getUserList(out);
+                            case 2 ->
+                                sendMessage(out, in, socket);
+                            case 3 ->
+                                getUserMessages(out, in, socket);
+                            case 4 -> {
+                                exitServer(out, socket);
+                                sessActive = false;
+                            }
+                            default ->
+                                out.println(Protocol.ERROR+"Please select a valid option");
                         }
-                        default ->
-                            out.println(Protocol.MESSAGE + "Invalid option. please try again");
+                    } catch (NumberFormatException e) {
+                        out.println(Protocol.ERROR+"Please select a valid option");
                     }
-                }
+
+                }                
+                
+                
             }
 
         } catch (IOException e) {
@@ -230,14 +237,16 @@ public class TextServer {
     public static void accessServer(PrintWriter out, BufferedReader in, Socket clientSocket) throws IOException {
         out.println(Protocol.MESSAGE + "Please enter your user name : ");
         String userName = in.readLine();
-        if (userName != null && users.containsKey(userName)) {
+        if (userName != null && !userName.isBlank() && users.containsKey(userName)) {
             out.println(Protocol.MESSAGE + "Please enter your password : ");
             String passwd = in.readLine();
             System.out.println("Username = " + userName + " Password = " + passwd);
-            if (users.get(userName).equalsIgnoreCase(passwd)) {
+            if (passwd != null && !passwd.isBlank() && users.get(userName).equalsIgnoreCase(passwd)) {
                 out.println(Protocol.MESSAGE + BORDER + "\n" + Protocol.MESSAGE + "Access Granted" + "\n" + Protocol.MESSAGE + BORDER);
                 System.out.println("Access Granted");
                 sessions.put(clientSocket, userName);
+            }else{
+                out.println(Protocol.ERROR + "Invalid Password, please try again");
             }
         } else {
             out.println(Protocol.MESSAGE + "User Was not found");
@@ -272,18 +281,22 @@ public class TextServer {
             String userName = sessions.get(clientSocket);
             out.println(Protocol.MESSAGE + "Enter a user name you want to send a message to : ");
             String receiver = in.readLine().strip();
-            if (receiver != null && users.containsKey(receiver)) {
+            if (receiver != null && !receiver.isBlank() && users.containsKey(receiver)) {
                 out.println(Protocol.MESSAGE + "Enter the message you want to send : ");
                 String msg = in.readLine();
-                Message newMsg = new Message(LocalDateTime.now(), userName, msg);
-                userMessages.get(receiver).add(newMsg);
-                out.println(Protocol.MESSAGE + "Status : Message sent successfully");
-                System.out.println("Received Message for " + receiver);
+                if(msg != null && !msg.isBlank()){
+                    Message newMsg = new Message(LocalDateTime.now(), userName, msg);
+                    userMessages.get(receiver).add(newMsg);                
+                    out.println(Protocol.MESSAGE + "Status : Message sent successfully");
+                    System.out.println("Received Message for " + receiver);
+                }else{
+                    out.println(Protocol.ERROR + "Unable to send message please try again.");
+                }
             } else {
-                out.println(Protocol.MESSAGE + "Unable to send message please try again.");
+                out.println(Protocol.ERROR + "Unable to send message please try again.");
             }
         }else{
-            out.println(Protocol.MESSAGE + "Username was not found on server, please try again");          
+            out.println(Protocol.ERROR + "Username was not found on server, please try again");          
         }
     }
 
@@ -297,13 +310,15 @@ public class TextServer {
     public static void getUserMessages(PrintWriter out, BufferedReader in, Socket clientSocket) {
         if (sessions.get(clientSocket) != null) {
             String user = sessions.get(clientSocket);
-            ArrayList<Message> userInbox = userMessages.get(user);
-            userInbox.sort(Message::compareTo);
             System.out.println("Retrieving Messages for " + user);
-            out.println(String.format("%s%n%s", Protocol.MESSAGE + "Here are your messages : ", Protocol.MESSAGE + BORDER));
-            userInbox.stream().map(x -> Protocol.MESSAGE + x.toString()).forEach(out::println);
+            ArrayList<Message> userInbox = userMessages.get(user);
+            if(!userInbox.isEmpty()){
+                userInbox.sort(Message::compareTo);
+                out.println(String.format("%s%n%s", Protocol.MESSAGE + "Here are your messages : ", Protocol.MESSAGE + BORDER));
+                userInbox.stream().map(x -> Protocol.MESSAGE + x.toString()).forEach(out::println);
+            }
         } else {
-            out.println(Protocol.MESSAGE + "Unable to retrieve User Messages, please try again");
+            out.println(Protocol.ERROR + "Unable to retrieve User Messages, please try again");
         }
     }
 
