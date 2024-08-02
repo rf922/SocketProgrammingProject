@@ -94,11 +94,19 @@ public class TextClient {
                     pw.println(userInput);
                 }
             }
+        }catch (ConnectException e){
+            System.out.println("Connection refused. Please ensure the server is running and reachable.");
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Network error occurred: " + e.getMessage());
+            //e.printStackTrace();
+        
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("An unexpected error occurred: " + e.getMessage());
+            //e.printStackTrace();
+        }finally {
+            executorService.shutdown();
         }
     }
+    
 
 }
