@@ -56,35 +56,7 @@ public class TextClient {
     public static void main(String[] args) {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         try (Socket textClientSocket = new Socket(HOST, PORT_NUM); BufferedReader clientInput = new BufferedReader(new InputStreamReader(System.in)); BufferedReader serverResponse = new BufferedReader(new InputStreamReader(textClientSocket.getInputStream())); PrintWriter pw = new PrintWriter(textClientSocket.getOutputStream(), true);) {
-            Runnable serverMessageHandler = () -> {//client side logic 
-                try {
-                    String serverMessage;
-                    while ((serverMessage = serverResponse.readLine()) != null ) {// main client loop
-                        //System.out.println("[ SERVER MESSAGE ]"+serverMessage);
-                        String[] segments = serverMessage.split(":", 2);
-                        int protocolCode = Integer.parseInt(segments[0]);
-                        String serverMsg = segments.length > 1 ? segments[1] : "";
-                        Protocol protocol = Protocol.fromCode(protocolCode);
-                        switch (protocol) {
-                            case MESSAGE -> // default message reponses from server
-                                System.out.println(serverMsg);
-                            case ERROR ->   // error messages from the server
-                                System.out.println("Error Message From Server : " + serverMsg);
-                            case EXIT -> {  // handles signal to exit the server
-                                System.out.println(serverMsg);
-                                executorService.shutdown();
-                                textClientSocket.close();
-                                System.exit(0);
-                            }
-                            default ->
-                                System.out.println("Unknown protocol code received : " + protocolCode);
-                        }
-
-                    }
-                } catch (IOException e) {
-                    System.out.println("Error reading from server: " + e.getMessage());
-                }
-            };
+            Runnable serverMessageHandler = () -> handleServerMessage(serverResponse);
 
             executorService.submit(serverMessageHandler);
 
@@ -104,7 +76,49 @@ public class TextClient {
             System.out.println("An unexpected error occurred: " + e.getMessage());
             //e.printStackTrace();
         }finally {
+            System.out.println("Exiting..");
             executorService.shutdown();
+        }
+    }
+    
+    /**
+     * while loop handles displaying server messages so long as there re more
+     * to display and subsequently processes the messages received
+     * @param serverResponse 
+     */
+    private static void handleServerMessage(BufferedReader serverResponse ){
+        try{
+            String serverMessage;
+            while((serverMessage = serverResponse.readLine()) != null){
+                processServerMessage(serverMessage);
+            }
+        }catch(IOException e){
+            System.out.println("Lost Connection to server : "+e.getMessage());
+        }
+    }
+    
+    /**
+     * handles the processing of server messages varyiing on the type of message
+     * received, either regular sevrer messages, error messages or the signal
+     * to exit
+     * @param serverMessage 
+     */
+    private static void processServerMessage(String serverMessage) {
+        String[] segments = serverMessage.split(":", 2);
+        int protocolCode = Integer.parseInt(segments[0]);
+        String serverMsg = segments.length > 1 ? segments[1] : "";
+        Protocol protocol = Protocol.fromCode(protocolCode);
+        switch (protocol) {
+            case MESSAGE -> // default message reponses from server
+                System.out.println(serverMsg);
+            case ERROR ->   // error messages from the server
+                System.out.println("Error Message From Server : " + serverMsg);
+            case EXIT -> {  // handles signal to exit the server
+                System.out.println(serverMsg);
+                System.exit(0);
+            }
+            default ->
+                System.out.println("Unknown protocol code received : " + protocolCode);
         }
     }
     
