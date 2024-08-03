@@ -224,6 +224,8 @@ public class TextServer {
      * Methods to handle processing each option 0 - 4
      *
      */
+     
+    
     
     /**
      * Prompts the user for their user name and password. Upon success informs
@@ -235,22 +237,28 @@ public class TextServer {
      * @throws IOException
      */
     public static void accessServer(PrintWriter out, BufferedReader in, Socket clientSocket) throws IOException {
-        out.println(Protocol.MESSAGE + "Please enter your user name : ");
-        String userName = in.readLine();
-        if (userName != null && !userName.isBlank() && users.containsKey(userName)) {
-            out.println(Protocol.MESSAGE + "Please enter your password : ");
-            String passwd = in.readLine();
-            System.out.println("Username = " + userName + " Password = " + passwd);
-            if (passwd != null && !passwd.isBlank() && users.get(userName).equalsIgnoreCase(passwd)) {
-                out.println(Protocol.MESSAGE + BORDER + "\n" + Protocol.MESSAGE + "Access Granted" + "\n" + Protocol.MESSAGE + BORDER);
-                System.out.println("Access Granted");
-                sessions.put(clientSocket, userName);
-            }else{
-                out.println(Protocol.ERROR + "Invalid Password, please try again");
+        boolean isAuthenticated = false;
+        while (!isAuthenticated) {// continue to prompt untill valid credentials are passed
+            out.println(Protocol.MESSAGE + "Please enter your user name : ");
+            String userName = in.readLine();
+            if (userName != null && !userName.isBlank() && users.containsKey(userName)) {
+                out.println(Protocol.MESSAGE + "Please enter your password : ");
+                String passwd = in.readLine();
+                System.out.println("Username = " + userName + " Password = " + passwd);
+                if (passwd != null && !passwd.isBlank() && users.get(userName).equalsIgnoreCase(passwd)) {
+                    out.println(Protocol.MESSAGE + BORDER + "\n" + Protocol.MESSAGE + "Access Granted" + "\n" + Protocol.MESSAGE + BORDER);
+                    System.out.println("Access Granted");
+                    sessions.put(clientSocket, userName);
+                    isAuthenticated = true;
+                } else {
+                    out.println(Protocol.ERROR + "Invalid Password, please try again");
+                }
+            } else {
+                out.println(Protocol.MESSAGE + "User Was not found");
             }
-        } else {
-            out.println(Protocol.MESSAGE + "User Was not found");
+
         }
+
     }
 
     /**
