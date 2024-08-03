@@ -23,7 +23,7 @@ public class TextClient {
      */
     private static enum Protocol {
         /**
-         * Codes for regular msg, error and exit
+         * Codes for msg, error and exit
          */
         MESSAGE(94132),
         ERROR(1),
