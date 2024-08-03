@@ -117,6 +117,8 @@ public class TextServer {
         users.put("Don", "secret-key04");
         users.put("Sean", "secret-key05");
         users.put("Brianna", "secret-key06");
+        users.put("Alice", "1234");
+        users.put("Bob", "5678");
 
         /**
          * User's messages / inboxes 
@@ -127,6 +129,8 @@ public class TextServer {
         userMessages.put("Keev", new ArrayList<>());
         userMessages.put("Sean", new ArrayList<>());
         userMessages.put("Brianna", new ArrayList<>());
+        userMessages.put("Alice", new ArrayList<>());
+        userMessages.put("Bob", new ArrayList<>());
         
         /**
          * Sample messages
@@ -251,10 +255,13 @@ public class TextServer {
                     sessions.put(clientSocket, userName);
                     isAuthenticated = true;
                 } else {
-                    out.println(Protocol.ERROR + "Invalid Password, please try again");
+                    out.println(Protocol.ERROR + "Access Denied – Username/Password Incorrect");
+                    System.out.println("Access Denied – Username/Password Incorrect");
                 }
             } else {
-                out.println(Protocol.MESSAGE + "User Was not found");
+                out.println(Protocol.MESSAGE + "Access Denied – Username/Password Incorrect");
+                System.out.println("Access Denied – Username/Password Incorrect");
+
             }
 
         }
