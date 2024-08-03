@@ -1,4 +1,4 @@
-ompiled Java classes
+# Compiled Java classes
 *.class
 
 # Package files
@@ -37,4 +37,10 @@ dist/
 # NetBeans Auto-generated files
 /nbproject/build-impl.xml
 /nbproject/genfiles.properties
+
+# Additional directories to ignore
+/test
+/nbproject/private/
+/build/
+/dist/
 
