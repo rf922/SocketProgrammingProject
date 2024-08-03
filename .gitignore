@@ -30,17 +30,13 @@ Thumbs.db
 *.bak
 *.tmp
 *.tmp_proj
-nbproject/private/
+
+# NetBeans project files and directories
+nbproject/**
+nbproject/
 build/
 dist/
 
-# NetBeans Auto-generated files
-/nbproject/build-impl.xml
-/nbproject/genfiles.properties
-
-# Additional directories to ignore
+# Test directories
 /test
-/nbproject/private/
-/build/
-/dist/
 
