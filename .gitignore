@@ -36,6 +36,8 @@ nbproject/**
 nbproject/
 build/
 dist/
+build.xml
+manifest.mf
 
 # Test directories
 /test
