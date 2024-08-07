@@ -3,7 +3,7 @@
  * This client is meant to connect to the textserver and allows the 
  * user to interact with and query the server
  */
-package textclient;
+//package textclient;
 
 import java.io.*;
 import java.net.*;

@@ -3,7 +3,7 @@
  * it allows clients to send messages to one another, see other users and
  * check received messages
  */
-package textserver;
+//package textserver;
 
 import java.io.*;
 import java.net.*;
