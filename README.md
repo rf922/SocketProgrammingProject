@@ -45,16 +45,6 @@ For testing purposes, use the following credentials:
 
 Start two instances of the client program to simulate interactions between multiple users.
 
-## Demo Video
-<div align="center">
-
-<a href="https://www.youtube.com/watch?v=Xyizgro5h70" target="_blank">
-  <img src="https://img.youtube.com/vi/Xyizgro5h70/hqdefault.jpg"
-       alt="Watch the demo on YouTube" width="60%">
-</a>
-
-</div>
-
 ---
 
 ## Screenshots
